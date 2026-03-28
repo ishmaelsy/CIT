@@ -14,6 +14,9 @@ import { useIssue, useUpvote, useMeToo } from "@/hooks/useIssues";
 import { useComments, useAddComment } from "@/hooks/useComments";
 import { sampleIssues } from "@/data/sampleData";
 import { formatDistanceToNow } from "date-fns";
+import { useTranslation } from "@/hooks/useTranslation";
+import TranslateBar from "@/components/TranslateBar";
+import ListenButton from "@/components/ListenButton";
 
 const IssueDetailPage = () => {
   const { id } = useParams();
@@ -47,6 +50,15 @@ const IssueDetailPage = () => {
   const upvote = useUpvote();
   const meToo = useMeToo();
   const addComment = useAddComment();
+  const {
+    translate: doTranslate,
+    clearTranslation,
+    getTranslated,
+    isTranslating,
+    isTranslated,
+    activeLang,
+    configured: translationConfigured,
+  } = useTranslation();
 
   const urgencyColors: Record<string, string> = {
     low: "bg-urgency-low text-primary-foreground",
@@ -117,15 +129,35 @@ const IssueDetailPage = () => {
           )}
         </div>
 
-        <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">{issue.title}</h2>
+        <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">{getTranslated("title", issue.title)}</h2>
 
-        <div className="flex items-center gap-3 text-sm text-muted-foreground mb-6">
+        <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
           <div className="flex items-center gap-1"><MapPin className="w-4 h-4" /><span>{issue.constituency}, {issue.region}</span></div>
           <span>·</span>
           <span>{daysOpen} days ago</span>
           <span>·</span>
           <span>by {issue.author_name || "Anonymous"}</span>
         </div>
+
+        {translationConfigured && (
+          <div className="mb-6">
+            <TranslateBar
+              onTranslate={(lang) =>
+                doTranslate(
+                  [
+                    { key: "title", text: issue.title },
+                    { key: "description", text: issue.description },
+                  ],
+                  lang
+                )
+              }
+              onClear={clearTranslation}
+              isTranslating={isTranslating}
+              isTranslated={isTranslated}
+              activeLang={activeLang}
+            />
+          </div>
+        )}
 
         {/* Magnitude */}
         <div className="bg-card border border-border rounded-xl p-4 mb-6">
@@ -150,8 +182,11 @@ const IssueDetailPage = () => {
         </div>
 
         <div className="mb-6">
-          <h3 className="font-display text-lg font-semibold text-foreground mb-2">Description</h3>
-          <p className="text-muted-foreground leading-relaxed">{issue.description}</p>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-display text-lg font-semibold text-foreground">Description</h3>
+            <ListenButton text={issue.description} />
+          </div>
+          <p className="text-muted-foreground leading-relaxed">{getTranslated("description", issue.description)}</p>
         </div>
 
         {/* Photos */}

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, BarChart3, Award, Bell, MapPin, LogIn, LogOut, Plus, User, Shield, Settings } from "lucide-react";
+import { Home, BarChart3, Award, Bell, MapPin, LogIn, LogOut, Plus, User, Shield, Settings, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -12,6 +12,7 @@ const TopNav = () => {
   const navLinks = [
     { to: "/feed", label: "Feed", icon: Home },
     { to: "/my-constituency", label: "My Area", icon: MapPin },
+    { to: "/projects", label: "Projects", icon: Lightbulb },
     { to: "/priority-board", label: "Priority Board", icon: BarChart3 },
     { to: "/leaderboard", label: "Leaderboard", icon: Award },
     { to: "/notifications", label: "Notifications", icon: Bell },
