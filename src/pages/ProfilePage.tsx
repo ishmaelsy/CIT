@@ -10,6 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { regions } from "@/data/sampleData";
+import {
+  SUPPORTED_LANGUAGES,
+  getDefaultLanguageForRegion,
+  isKhayaConfigured,
+  type KhayaLangCode,
+} from "@/lib/khaya";
+import { Languages } from "lucide-react";
 
 const sampleDistricts: Record<string, string[]> = {
   Ashanti: ["Kumasi Metropolitan", "Obuasi Municipal", "Ejisu Municipal"],
@@ -60,6 +67,9 @@ const ProfilePage = () => {
   const [district, setDistrict] = useState(profile?.district || "");
   const [constituency, setConstituency] = useState(profile?.constituency || "");
   const [saving, setSaving] = useState(false);
+  const [preferredLang, setPreferredLang] = useState<string>(
+    () => localStorage.getItem("cit_preferred_lang") || ""
+  );
 
   useEffect(() => {
     if (profile) {
@@ -213,6 +223,34 @@ const ProfilePage = () => {
                       <SelectTrigger><SelectValue placeholder="Select constituency" /></SelectTrigger>
                       <SelectContent>{constituencies.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                     </Select>
+                  </div>
+                )}
+                {isKhayaConfigured() && (
+                  <div>
+                    <Label className="text-sm flex items-center gap-1.5">
+                      <Languages className="w-3.5 h-3.5" /> Preferred Language
+                    </Label>
+                    <Select
+                      value={preferredLang}
+                      onValueChange={(v) => {
+                        setPreferredLang(v);
+                        if (v) localStorage.setItem("cit_preferred_lang", v);
+                        else localStorage.removeItem("cit_preferred_lang");
+                      }}
+                    >
+                      <SelectTrigger><SelectValue placeholder="English (default)" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English (default)</SelectItem>
+                        {SUPPORTED_LANGUAGES.map((l) => (
+                          <SelectItem key={l.code} value={l.code}>
+                            {l.name} ({l.nativeName})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Content will offer translation to this language via Khaya AI
+                    </p>
                   </div>
                 )}
                 <div className="flex gap-2">

@@ -16,6 +16,14 @@ import { categories, regions, sampleIssues } from "@/data/sampleData";
 import { useCreateIssue } from "@/hooks/useIssues";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  SUPPORTED_LANGUAGES,
+  isKhayaConfigured,
+  translateText,
+  getDefaultLanguageForRegion,
+  type KhayaLangCode,
+} from "@/lib/khaya";
+import { Languages } from "lucide-react";
 
 const urgencyLevels = [
   { value: "low", label: "Low", color: "bg-urgency-low", desc: "Minor inconvenience" },
@@ -57,6 +65,13 @@ const ReportIssuePage = () => {
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [writingInLocal, setWritingInLocal] = useState(false);
+  const [localLang, setLocalLang] = useState<KhayaLangCode>(
+    () =>
+      (localStorage.getItem("cit_preferred_lang") as KhayaLangCode) ||
+      (profile?.region ? getDefaultLanguageForRegion(profile.region) : null) ||
+      "tw"
+  );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -121,11 +136,24 @@ const ReportIssuePage = () => {
 
     setUploading(true);
     try {
+      let finalTitle = title.trim();
+      let finalDescription = description.trim();
+
+      if (writingInLocal && isKhayaConfigured()) {
+        toast.info("Translating your submission to English...");
+        const [enTitle, enDesc] = await Promise.all([
+          translateText(finalTitle, localLang, "local-to-en"),
+          translateText(finalDescription, localLang, "local-to-en"),
+        ]);
+        finalTitle = enTitle;
+        finalDescription = `${enDesc}\n\n[Original (${SUPPORTED_LANGUAGES.find((l) => l.code === localLang)?.name}): ${description.trim()}]`;
+      }
+
       const imageUrls = await uploadPhotos();
       createIssue.mutate(
         {
-          title: title.trim(),
-          description: description.trim(),
+          title: finalTitle,
+          description: finalDescription,
           category,
           region,
           district: district || region,
@@ -141,7 +169,7 @@ const ReportIssuePage = () => {
         }
       );
     } catch (err: any) {
-      toast.error("Failed to upload photos: " + err.message);
+      toast.error("Failed: " + err.message);
     } finally {
       setUploading(false);
     }
@@ -191,17 +219,56 @@ const ReportIssuePage = () => {
           </Card>
         )}
 
+        {/* Local language toggle */}
+        {isKhayaConfigured() && (
+          <div className="flex items-center justify-between gap-3 px-3 py-2.5 border border-border rounded-sm bg-card">
+            <div className="flex items-center gap-2 text-sm">
+              <Languages className="w-4 h-4 text-muted-foreground" />
+              <span className="text-foreground font-medium">Write in local language</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {writingInLocal && (
+                <Select value={localLang} onValueChange={(v) => setLocalLang(v as KhayaLangCode)}>
+                  <SelectTrigger className="h-7 w-28 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUPPORTED_LANGUAGES.map((l) => (
+                      <SelectItem key={l.code} value={l.code}>{l.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={writingInLocal}
+                onClick={() => setWritingInLocal(!writingInLocal)}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${writingInLocal ? "bg-primary" : "bg-muted"}`}
+              >
+                <span className={`pointer-events-none block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${writingInLocal ? "translate-x-4" : "translate-x-0"}`} />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Title */}
         <div className="space-y-2">
-          <Label htmlFor="title" className="text-sm font-semibold">Issue Title *</Label>
-          <Input id="title" placeholder="e.g. Broken streetlights on main road" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} />
+          <Label htmlFor="title" className="text-sm font-semibold">
+            Issue Title *
+            {writingInLocal && <span className="text-xs font-normal text-muted-foreground ml-1.5">(in {SUPPORTED_LANGUAGES.find((l) => l.code === localLang)?.name})</span>}
+          </Label>
+          <Input id="title" placeholder={writingInLocal ? "Type in your language — auto-translated on submit" : "e.g. Broken streetlights on main road"} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} />
           <p className="text-xs text-muted-foreground">{title.length}/120</p>
         </div>
 
         {/* Description */}
         <div className="space-y-2">
-          <Label htmlFor="desc" className="text-sm font-semibold">Description *</Label>
-          <Textarea id="desc" placeholder="Describe the issue in detail..." value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[120px]" maxLength={2000} />
+          <Label htmlFor="desc" className="text-sm font-semibold">
+            Description *
+            {writingInLocal && <span className="text-xs font-normal text-muted-foreground ml-1.5">(in {SUPPORTED_LANGUAGES.find((l) => l.code === localLang)?.name})</span>}
+          </Label>
+          <Textarea id="desc" placeholder={writingInLocal ? "Describe in your language — auto-translated on submit" : "Describe the issue in detail..."} value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[120px]" maxLength={2000} />
           <p className="text-xs text-muted-foreground">{description.length}/2000</p>
         </div>
 

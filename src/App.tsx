@@ -19,6 +19,9 @@ import ProfilePage from "./pages/ProfilePage";
 import OfficialDashboard from "./pages/OfficialDashboard";
 import MyConstituencyPage from "./pages/MyConstituencyPage";
 import AdminPage from "./pages/AdminPage";
+import ProjectSuggestionsPage from "./pages/ProjectSuggestionsPage";
+import SuggestProjectPage from "./pages/SuggestProjectPage";
+import ProjectDetailPage from "./pages/ProjectDetailPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +48,9 @@ const App = () => (
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/official-dashboard" element={<OfficialDashboard />} />
             <Route path="/my-constituency" element={<MyConstituencyPage />} />
+            <Route path="/projects" element={<ProjectSuggestionsPage />} />
+            <Route path="/projects/suggest" element={<SuggestProjectPage />} />
+            <Route path="/projects/:id" element={<ProjectDetailPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

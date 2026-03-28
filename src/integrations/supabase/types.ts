@@ -225,6 +225,83 @@ export type Database = {
           },
         ]
       }
+      project_suggestions: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          description: string
+          category: string
+          constituency: string
+          region: string
+          district: string
+          estimated_impact: string | null
+          status: string
+          vote_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          description: string
+          category: string
+          constituency: string
+          region: string
+          district: string
+          estimated_impact?: string | null
+          status?: string
+          vote_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          description?: string
+          category?: string
+          constituency?: string
+          region?: string
+          district?: string
+          estimated_impact?: string | null
+          status?: string
+          vote_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_votes: {
+        Row: {
+          id: string
+          user_id: string
+          project_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          project_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          project_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_votes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       priority_votes: {
         Row: {
           created_at: string
